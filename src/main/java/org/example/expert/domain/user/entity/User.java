@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.common.entity.Timestamped;
 import org.example.expert.domain.user.enums.UserRole;
+import org.springframework.security.core.GrantedAuthority;
 
 @Getter
 @Entity
@@ -29,14 +30,17 @@ public class User extends Timestamped {
         this.userRole = userRole;
     }
 
-    private User(Long id, String email, UserRole userRole) {
+    private User(Long id, String email, String nickName,UserRole userRole) {
         this.id = id;
         this.email = email;
+        this.nickName = nickName;
         this.userRole = userRole;
     }
 
     public static User fromAuthUser(AuthUser authUser) {
-        return new User(authUser.getId(), authUser.getEmail(), authUser.getUserRole());
+        GrantedAuthority grantedAuthority = authUser.getAuthorities().stream().findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("유저 찾지 못함"));
+        return new User(authUser.getUserId(), authUser.getEmail(), authUser.getNickName(), UserRole.of(grantedAuthority.getAuthority()));
     }
 
     public void changePassword(String password) {
